@@ -26,7 +26,8 @@ resource "aws_iam_policy" "rotation" {
           "secretsmanager:DescribeSecret",
           "secretsmanager:GetSecretValue",
           "secretsmanager:PutSecretValue",
-          "secretsmanager:UpdateSecretVersionStage"
+          "secretsmanager:UpdateSecretVersionStage",
+          "secretsmanager:GetRandomPassword"
         ],
         Resource = aws_secretsmanager_secret.db.arn
       },
