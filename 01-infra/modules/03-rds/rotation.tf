@@ -1,12 +1,3 @@
-# 1. Archive Lambda source code
-
-data "archive_file" "rotation" {
-  type        = "zip"
-  source_file = "${path.module}/templates/rotation.py"
-  output_path = "${path.module}/lambda/rotation.zip"
-}
-
-# 2. IAM Role for Lambda
 resource "aws_iam_role" "rotation" {
   name = "${local.identifier}-rotation-role"
 
@@ -22,7 +13,6 @@ resource "aws_iam_role" "rotation" {
   })
 }
 
-# 3. IAM Policy for RDS rotation
 resource "aws_iam_policy" "rotation" {
   name        = "${local.identifier}-rotation-policy"
   description = "Policy for RDS secret rotation"
@@ -33,6 +23,7 @@ resource "aws_iam_policy" "rotation" {
       {
         Effect = "Allow",
         Action = [
+          "secretsmanager:DescribeSecret",
           "secretsmanager:GetSecretValue",
           "secretsmanager:PutSecretValue",
           "secretsmanager:UpdateSecretVersionStage"
@@ -74,7 +65,6 @@ resource "aws_iam_role_policy_attachment" "rotation" {
   policy_arn = aws_iam_policy.rotation.arn
 }
 
-# 4. Lambda Function for rotation
 resource "aws_lambda_function" "rotation" {
   function_name = "${local.identifier}-rotation"
   handler       = "rotation.lambda_handler"
@@ -82,8 +72,8 @@ resource "aws_lambda_function" "rotation" {
   role          = aws_iam_role.rotation.arn
   timeout       = 30
 
-  filename         = data.archive_file.rotation.output_path
-  source_code_hash = data.archive_file.rotation.output_base64sha256
+  filename         = "${path.module}/rotation.zip"
+  source_code_hash = filebase64sha256("${path.module}/rotation.zip")
 
   vpc_config {
     subnet_ids         = var.db_subnet_ids
@@ -92,7 +82,6 @@ resource "aws_lambda_function" "rotation" {
 
 }
 
-# 5. Attach Lambda to Secret for rotation
 
 resource "aws_lambda_permission" "allow_secretsmanager" {
   statement_id  = "AllowSecretsManagerInvoke"
