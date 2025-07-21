@@ -48,8 +48,21 @@ resource "aws_iam_policy" "rotation" {
         Resource = "*"
       },
       {
-        Effect   = "Allow",
-        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DeleteNetworkInterface"
+        ],
         Resource = "*"
       }
     ]
@@ -76,13 +89,28 @@ resource "aws_lambda_function" "rotation" {
     subnet_ids         = var.db_subnet_ids
     security_group_ids = [aws_security_group.this.id]
   }
+
 }
 
 # 5. Attach Lambda to Secret for rotation
+
+resource "aws_lambda_permission" "allow_secretsmanager" {
+  statement_id  = "AllowSecretsManagerInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.rotation.function_name
+  principal     = "secretsmanager.amazonaws.com"
+  source_arn    = aws_secretsmanager_secret.db.arn
+}
+
 resource "aws_secretsmanager_secret_rotation" "db" {
   secret_id           = aws_secretsmanager_secret.db.id
   rotation_lambda_arn = aws_lambda_function.rotation.arn
+
   rotation_rules {
     automatically_after_days = 30
   }
+
+  depends_on = [
+    aws_lambda_permission.allow_secretsmanager
+  ]
 }
