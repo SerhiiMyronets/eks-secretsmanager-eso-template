@@ -29,13 +29,11 @@ module "rds" {
 
 
 module "irsa" {
-  source                 = "./modules/04-irsa"
-  cluster_name           = var.cluster_name
-  aws_region             = var.region
-  oidc_provider_arn      = module.eks.oidc_provider_arn
-  oidc_provider_url      = module.eks.oidc_provider_url
-  interruption_queue_arn = module.karpenter.interruption_queue_arn
-  ssm_parameter_arns     = var.enable_rds ? module.rds.db_credential_arns : ["arn:aws:ssm:::"]
+  source            = "./modules/04-irsa"
+  cluster_name      = var.cluster_name
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+  secret_arns       = module.rds.db_credential_arns
 }
 
 # module "render" {
