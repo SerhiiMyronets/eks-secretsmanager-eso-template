@@ -155,6 +155,19 @@ Once inside the pod:
 mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD"
 ```
 
+4. **Trigger manual secret rotation via AWS Console**
+
+You can test the rotation flow by manually triggering it:
+
+* Open the **AWS Console** → **Secrets Manager**
+* Locate the RDS secret created by the Terraform module
+* Choose **Rotate secret immediately** from the Actions menu
+
+This triggers the Lambda function that updates the RDS password. You can then:
+
+* Inspect the logs of the rotation Lambda function via **CloudWatch Logs**
+* Wait a few moments, then re-check the synced secret in Kubernetes
+
 ---
 
 ## 📸 Screenshots
