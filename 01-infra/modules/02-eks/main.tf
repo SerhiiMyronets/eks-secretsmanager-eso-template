@@ -89,18 +89,3 @@ resource "aws_iam_openid_connect_provider" "eks" {
 data "tls_certificate" "eks" {
   url = aws_eks_cluster.main.identity[0].oidc[0].issuer
 }
-
-data "aws_eks_cluster" "this" {
-  name = aws_eks_cluster.main.name
-}
-
-resource "aws_ec2_tag" "karpenter_discovery_tag" {
-  for_each = {
-    "karpenter.sh/discovery" = var.cluster_name
-    "Name"                   = "${var.cluster_name}-cluster-sg"
-  }
-
-  resource_id = data.aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
-  key         = each.key
-  value       = each.value
-}

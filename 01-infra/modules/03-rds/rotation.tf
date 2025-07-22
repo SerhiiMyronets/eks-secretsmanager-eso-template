@@ -28,14 +28,14 @@ resource "aws_iam_policy" "rotation" {
           "secretsmanager:PutSecretValue",
           "secretsmanager:UpdateSecretVersionStage"
         ],
-        Resource = aws_secretsmanager_secret.db.arn
+        Resource = local.secret_arn
       },
       {
-        "Action": [
+        "Action" : [
           "secretsmanager:GetRandomPassword"
         ],
-        "Effect": "Allow",
-        "Resource": "*"
+        "Effect" : "Allow",
+        "Resource" : "*"
       },
       {
         Effect = "Allow",
@@ -95,11 +95,11 @@ resource "aws_lambda_permission" "allow_secretsmanager" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.rotation.function_name
   principal     = "secretsmanager.amazonaws.com"
-  source_arn    = aws_secretsmanager_secret.db.arn
+  source_arn    = local.secret_arn
 }
 
 resource "aws_secretsmanager_secret_rotation" "db" {
-  secret_id           = aws_secretsmanager_secret.db.id
+  secret_id           = local.secret_id
   rotation_lambda_arn = aws_lambda_function.rotation.arn
 
   rotation_rules {
