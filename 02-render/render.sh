@@ -11,17 +11,12 @@ terraform output -json > outputs.json
 popd > /dev/null
 
 echo "Rendering templates to $OUTPUT_DIR..."
-mkdir -p "$OUTPUT_DIR/rendered-manifests"
 mkdir -p "$OUTPUT_DIR/helm-values"
 
 for template in "$TEMPLATE_DIR"/*.gotmpl; do
   filename=$(basename "$template" .gotmpl)
 
-  if [[ "$filename" == *-values.yaml ]]; then
-    outpath="$OUTPUT_DIR/helm-values/${filename}"
-  else
-    outpath="$OUTPUT_DIR/rendered-manifests/${filename}"
-  fi
+  outpath="$OUTPUT_DIR/helm-values/${filename}"
 
   gomplate \
     --context .=${OUTPUTS_FILE} \
