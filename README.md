@@ -1,4 +1,4 @@
-# Terraform Setup for EKS + Secrets Manager + ESO
+# Secure AWS Secrets Sync and Rotation in EKS with Terraform, ESO & Lambda
 
 A minimal and extensible infrastructure template that demonstrates how to inject and rotate secrets from AWS Secrets Manager into Kubernetes using External Secrets Operator (ESO), fully provisioned with Terraform.
 
