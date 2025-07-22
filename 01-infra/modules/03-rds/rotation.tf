@@ -79,8 +79,8 @@ resource "aws_lambda_function" "rotation" {
   role          = aws_iam_role.rotation.arn
   timeout       = 30
 
-  filename         = "${path.module}/rotation.zip"
-  source_code_hash = filebase64sha256("${path.module}/rotation.zip")
+  filename         = "${path.module}/lambda/rotation.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda/rotation.zip")
 
   vpc_config {
     subnet_ids         = var.db_subnet_ids
