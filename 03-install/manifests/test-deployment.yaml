@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-test
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secret-test
+  template:
+    metadata:
+      labels:
+        app: secret-test
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              echo "host=$host"
+              echo "username=$username"
+              echo "password=$password"
+              sleep 3600
+          env:
+            - name: host
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: host
+            - name: username
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: username
+            - name: password
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
