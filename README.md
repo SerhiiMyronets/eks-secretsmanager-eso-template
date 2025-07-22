@@ -1,20 +1,21 @@
 # Terraform Setup for EKS + Secrets Manager + ESO
 
-A minimal and extensible infrastructure template for integrating AWS Secrets Manager with External Secrets Operator (ESO) in EKS, provisioned via Terraform.
+A minimal and extensible infrastructure template that demonstrates how to inject and rotate secrets from AWS Secrets Manager into Kubernetes using External Secrets Operator (ESO), fully provisioned with Terraform.
 
-This repository provisions an EKS cluster with IRSA roles, an RDS instance, and sets up ESO to sync secrets from Secrets Manager. It includes an example with a test pod and MySQL client to demonstrate secret injection.
+This repository provisions an EKS cluster, sets up IAM roles via IRSA, and deploys an RDS MySQL database with automated password rotation using AWS Lambda. It integrates ESO to expose secrets from AWS Secrets Manager to Kubernetes workloads securely. The setup also includes test deployments for validation.
 
-Helm values and Kubernetes manifests are rendered automatically using `gomplate`, enabling GitOps-friendly workflows.
+Helm values and Kubernetes manifests are rendered using `gomplate` based on Terraform outputs, enabling a clean GitOps-friendly deployment workflow.
 
 The goal is to keep the setup simple, reproducible, and aligned with how External Secrets Operator and AWS Secrets Manager are typically used in production environments.
 
 ### ✦ Features
 
-* Terraform-driven provisioning of EKS, IAM, Secrets Manager, and RDS
-* Secure secret delivery to Kubernetes via External Secrets Operator
-* MySQL test deployment to verify secrets injection
-* gomplate-based rendering of Helm values and Kubernetes manifests
-* GitOps-compatible layout with rendered files ready for Argo CD or `kubectl apply`
+* Complete EKS and VPC provisioning via Terraform
+* RDS MySQL instance with random password generation and AWS-managed rotation
+* Lambda function for automatic password rotation via Secrets Manager
+* External Secrets Operator installed and configured with IRSA permissions
+* gomplate-powered rendering of Helm values and Kubernetes manifests
+* Sample workloads that consume secrets and validate integration (e.g. MySQL client, log printer)
 
 ---
 
@@ -22,24 +23,24 @@ The goal is to keep the setup simple, reproducible, and aligned with how Externa
 
 ```
 .
-├── 01-infra                # Terraform config for EKS and dependencies
+├── 01-infra                # Terraform code for core AWS infrastructure
 │   ├── main.tf
 │   ├── outputs.tf
 │   ├── providers.tf
 │   ├── variables.tf
-│   └── modules/            # Infrastructure modules
-│       ├── 01-vpc/         # VPC with public and private subnets
-│       ├── 02-eks/         # EKS cluster and node group
-│       ├── 03-rds/         # RDS MySQL instance
-│       └── 04-irsa/        # IAM Roles for Service Accounts (IRSA)
+│   └── modules/            # Reusable Terraform modules
+│       ├── 01-vpc/         # VPC with public/private subnets (same as Karpenter template)
+│       ├── 02-eks/         # EKS cluster and node group (same as Karpenter template)
+│       ├── 03-rds/         # RDS MySQL instance, password secret, Lambda rotation
+│       └── 04-irsa/        # IRSA role with policy for ESO access to Secrets Manager
 ├── 02-render               # gomplate rendering engine
-│   ├── render.sh           # Script to render manifests
-│   └── templates/          # gomplate templates for Helm values
+│   ├── render.sh           # Script to render manifests from Terraform outputs
+│   └── templates/          # gomplate templates for ESO Helm values
 ├── 03-install              # Output manifests and Helm values
 │   ├── helm-values/        # Rendered Helm values for installation
-│   └── manifests/          # Kubernetes manifests ready for apply
+│   └── manifests/          # Kubernetes manifests: ClusterSecretStore, ExternalSecret, tests
 ├── docs/
-│   └── screenshots/        # Optional screenshots for documentation
+│   └── screenshots/        # Optional screenshots
 ```
 
 ---
@@ -54,7 +55,7 @@ terraform init
 terraform apply
 ```
 
-This will provision EKS, IRSA roles, and RDS.
+This step creates the VPC, EKS cluster, IRSA roles, RDS MySQL instance, secret in Secrets Manager, Lambda function for password rotation, and rotation configuration.
 
 ### 2. Render Templates
 
@@ -63,25 +64,51 @@ cd 02-render
 ./render.sh
 ```
 
-### 3. Install ESO and Deploy Resources
+This script will:
+
+* Pull values from Terraform outputs (ARNs, secret names, etc.)
+* Generate Helm `values.yaml` for ESO chart
+* Place rendered files in `03-install/`
+
+### 3. Install ESO and Kubernetes Resources
 
 ```bash
+# Install ESO Helm chart
+helm upgrade --install external-secrets external-secrets/external-secrets \
+  -n external-secrets --create-namespace \
+  -f 03-install/helm-values/external-secrets-values.yaml
+
+# Apply core manifests
 kubectl apply -f 03-install/manifests/
 ```
 
 ---
 
-## 🧪 Verify Secrets
+## 🧪 Verify Secrets Integration
+
+Test deployment reads secrets and prints them to logs:
 
 ```bash
 kubectl logs deploy/test-deployment
+```
 
-kubectl exec -it deploy/mysql-deployment -- mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD"
+MySQL client pod connects to the rotated password in the RDS database:
+
+```bash
+kubectl exec -it deploy/mysql-deployment -- \
+  mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD"
 ```
 
 ---
 
 ## 📸 Screenshots
+
+<details>
+<summary>Example Output</summary>
+
+![Secret injection](docs/screenshots/eso-secret-output.png)
+
+</details>
 
 ---
 
