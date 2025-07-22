@@ -45,9 +45,29 @@ The goal is to keep the setup simple, reproducible, and aligned with how Externa
 
 ---
 
-## 🚀 Usage
+## ✦ Prerequisites
+
+The following tools must be available in your environment:
+
+* **Terraform** — for provisioning AWS infrastructure
+* **AWS CLI** — used by Terraform and general access to AWS
+* **kubectl** — to apply Kubernetes manifests and interact with the cluster
+* **gomplate** — for rendering manifests and Helm values from templates
+* **Helm** — to install Karpenter into the cluster
+
+---
+
+## ⚙️ Setup Instructions
 
 ### 1. Provision Infrastructure
+
+#### terraform.tfvars
+
+You don't need to create a `terraform.tfvars` file unless you want to override the default configuration. All variables have safe and low-cost defaults, but for customization (such as region, AZs, or instance types), an example file `terraform.tfvars.example` is provided.
+
+💡 The defaults are optimized for learning, demos, and minimal AWS costs.
+
+This step provisions all core AWS resources: VPC, subnets, Internet Gateway, IAM roles, RDS MySQL database, AWS Lambda and the EKS cluster itself.
 
 ```bash
 cd 01-infra
@@ -55,24 +75,34 @@ terraform init
 terraform apply
 ```
 
-This step creates the VPC, EKS cluster, IRSA roles, RDS MySQL instance, secret in Secrets Manager, Lambda function for password rotation, and rotation configuration.
+Once complete, Terraform will produce a set of outputs that will be consumed by the next step.
 
-### 2. Render Templates
+Among the outputs, you will see a ready-to-run command for configuring your kubeconfig to access the cluster:
+
+**aws eks update-kubeconfig --region <\<region\>> --name <\<cluster\_name>>**
+
+This command is generated automatically based on your configuration.
+
+---
+
+### 2. Render Manifests
+
+This step takes the Terraform outputs and uses them to generate Helm values using gomplate.
 
 ```bash
-cd 02-render
-./render.sh
+cd ../02-render
+bash render.sh
 ```
 
-This script will:
+The rendered files will be placed into `03-install/helm-values`.
 
-* Pull values from Terraform outputs (ARNs, secret names, etc.)
-* Generate Helm `values.yaml` for ESO chart
-* Place rendered files in `03-install/`
+---
 
 ### 3. Install ESO and Kubernetes Resources
 
 ```bash
+cd ../03-install
+
 # Install ESO Helm chart
 helm upgrade --install external-secrets external-secrets/external-secrets \
   -n external-secrets --create-namespace \
