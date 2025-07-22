@@ -170,10 +170,48 @@ This triggers the Lambda function that updates the RDS password. You can then:
 
 ---
 
-## 📸 Screenshots
+## ✦ Secret Lifecycle in Action
+
+<details>
+<summary>▶️ Synced ESO Resources in Cluster</summary>
+
+![Synced ESO Resources](docs/screenshots/eso-resources-synced.png)
+
+</details>
+
+<details>
+<summary>▶️ Lambda Rotation Logs in CloudWatch</summary>
+
+![Lambda Rotation Logs](docs/screenshots/lambda-rotation-logs.png)
+
+</details>
+
+<details>
+<summary>▶️ MySQL Client Connected with Rotated Secret</summary>
+
+![MySQL Client via Secret](docs/screenshots/mysql-client-secret.png)
+
+</details>
 
 ---
 
-## 📜 License
+## ✦ Cleanup Notes
 
-MIT © [Serhii Myronets](https://github.com/serhii-myronets)
+To delete all provisioned resources, simply destroy the infrastructure with Terraform.
+
+```bash
+cd 01-infra
+terraform destroy
+```
+
+This command will:
+
+* Remove the EKS cluster and all associated node groups
+* Delete the RDS instance and related secrets
+* Clean up IAM roles, VPC, subnets, and Lambda resources
+
+---
+
+## 📄 License
+
+MIT © [Serhii Myronets](https://github.com/your-github-profile)
