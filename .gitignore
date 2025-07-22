@@ -9,3 +9,4 @@
 **/.terraform/
 .terraform/
 03-install/helm-values/*
+outputs.json
