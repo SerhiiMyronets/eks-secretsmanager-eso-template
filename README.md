@@ -79,7 +79,7 @@ Once complete, Terraform will produce a set of outputs that will be consumed by 
 
 Among the outputs, you will see a ready-to-run command for configuring your kubeconfig to access the cluster:
 
-**aws eks update-kubeconfig --region <\<region\>> --name <\<cluster\_name>>**
+**aws eks update-kubeconfig --region <\*\*\*\*> --name <\<cluster\_name>>**
 
 This command is generated automatically based on your configuration.
 
@@ -112,21 +112,47 @@ helm upgrade --install external-secrets external-secrets/external-secrets \
 kubectl apply -f 03-install/manifests/
 ```
 
+This step installs the External Secrets Operator into the cluster and applies Kubernetes manifests that define:
+
+* A `ClusterSecretStore` linked to AWS Secrets Manager
+* An `ExternalSecret` that syncs data from a specific AWS secret into a Kubernetes secret
+* A test pod that logs the secret values
+* A MySQL client deployment that connects to the RDS instance using credentials stored in Secrets Manager
+
 ---
 
-## 🧪 Verify Secrets Integration
+## ✦ Verify Secrets Integration
 
-Test deployment reads secrets and prints them to logs:
+Once everything is deployed, you can validate that secrets are being successfully synced from AWS Secrets Manager to your Kubernetes workloads.
+
+1. **Inspect Kubernetes Secret**
+
+You can directly list and describe the synced Kubernetes secret created by External Secrets Operator. This is the simplest way to confirm that the secret exists and contains the expected data:
+
+```bash
+kubectl get secret rds-secret -o yaml
+```
+
+2. **View synced secret values via logs**
+
+A test deployment is configured to consume the injected secret and print the values to the logs. This is a quick way to verify that External Secrets Operator is working correctly:
 
 ```bash
 kubectl logs deploy/test-deployment
 ```
 
-MySQL client pod connects to the rotated password in the RDS database:
+3. **Connect to the RDS database using secrets**
+
+A MySQL client pod is also deployed to test live access to the RDS instance. You can open a shell session inside the pod and run the `mysql` command using the synced secrets as credentials:
 
 ```bash
-kubectl exec -it deploy/mysql-deployment -- \
-  mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD"
+kubectl exec -it deploy/mysql-deployment -- /bin/sh
+```
+
+Once inside the pod:
+
+```bash
+mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD"
 ```
 
 ---
