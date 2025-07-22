@@ -1,11 +1,11 @@
-# resource "aws_secretsmanager_secret" "db" {
-#   name        = "${local.identifier}-credentials"
-#   description = "Credentials for RDS instance ${local.identifier}"
-#
-#   lifecycle {
-#     prevent_destroy = true
-#   }
-# }
+resource "aws_secretsmanager_secret" "db" {
+  name        = "${local.identifier}-credentials"
+  description = "Credentials for RDS instance ${local.identifier}"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
 
 data "aws_secretsmanager_secret" "db" {
   name = "${local.identifier}-credentials"
