@@ -38,7 +38,7 @@ The goal is to keep the setup simple, reproducible, and aligned with how Externa
 │   └── templates/          # gomplate templates for ESO Helm values
 ├── 03-install              # Output manifests and Helm values
 │   ├── helm-values/        # Rendered Helm values for installation
-│   └── manifests/          # Kubernetes manifests: ClusterSecretStore, ExternalSecret, tests
+│   └── manifests/          # ClusterSecretStore, ExternalSecret, tests
 ├── docs/
 │   └── screenshots/        # Optional screenshots
 ```
@@ -102,13 +102,6 @@ kubectl exec -it deploy/mysql-deployment -- \
 ---
 
 ## 📸 Screenshots
-
-<details>
-<summary>Example Output</summary>
-
-![Secret injection](docs/screenshots/eso-secret-output.png)
-
-</details>
 
 ---
 
