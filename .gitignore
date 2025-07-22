@@ -8,3 +8,4 @@
 **/.terraform.lock.hcl
 **/.terraform/
 .terraform/
+03-install/helm-values/*
